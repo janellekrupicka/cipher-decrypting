@@ -9,50 +9,31 @@ ALPHA_LIST = list(ALPHA)
 def home():
     return render_template('form.html')
 
-def encrypt(key, plaintext):
+def key_operations(key, text):
+    text = text.lower()
+    new = [None] * len(text)
 
-    plaintext = plaintext.lower()
-    key = int(key)
-    cipher_arr = [None] * len(plaintext)
+    for idx, char in enumerate(text):
 
-    for idx, char in enumerate(plaintext):
-
-        ciph_idx = ALPHA_LIST.index(char)
-        if ciph_idx == -1:
-            cipher_arr[idx] = char
-            continue
-        
-        cipher_arr[idx] = ALPHA_LIST[(ciph_idx + key) % 26]
-
-    return ''.join(cipher_arr).upper()
-
-def decrypt_key(key, ciphertext):
-
-    ciphertext = ciphertext.lower()
-    key = int(key)
-    plaintext_arr = [None] * len(ciphertext)
-
-    for idx, char in enumerate(ciphertext):
-
-        ciph_idx = ALPHA_LIST.index(char)
-        if ciph_idx == -1:
-            plaintext_arr[idx] = char
+        if char not in ALPHA_LIST:
+            new[idx] = char
             continue
 
-        plaintext_arr[idx] = ALPHA_LIST[(ciph_idx + 26 - key) % 26]
+        new_idx = ALPHA_LIST.index(char)
+        new[idx] = ALPHA_LIST[(new_idx + key) % 26]
 
-    return ''.join(plaintext_arr).lower()
+    return ''.join(new).upper()
 
 @app.route('/encrypt/', methods = ['POST'])
 def encrypt_http():
     form_data = request.form
-    ciphertext = encrypt(form_data["Key"], form_data["Plaintext"])
+    ciphertext = key_operations(int(form_data["Key"]), form_data["Plaintext"])
 
     return render_template('data.html', form_data = form_data, text=ciphertext)
 
 @app.route('/decrypt/', methods = ['POST'])
 def decrypt_http():
     form_data = request.form
-    plaintext = decrypt_key(form_data["Key"], form_data["Ciphertext"])
+    plaintext = key_operations(26 - int(form_data["Key"]), form_data["Ciphertext"])
 
     return render_template('data.html', form_data = form_data, text= plaintext)
